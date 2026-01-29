@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "330473134097",
+    "project_id": "homeessentials-6844c",
+    "storage_bucket": "homeessentials-6844c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330473134097:android:7215ae77209d8d340239b0",
+        "android_client_info": {
+          "package_name": "com.example.homeessentials"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHF1jlfu8PZHzvicr0jLKrlnB6UzZ0HTA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
