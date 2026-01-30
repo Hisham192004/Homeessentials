@@ -5,26 +5,29 @@ import 'package:firebase_auth/firebase_auth.dart';
 class UserCartScreen extends StatelessWidget {
   const UserCartScreen({super.key});
 
-  Future<void> placeOrder(BuildContext context) async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
+  String get userId => FirebaseAuth.instance.currentUser!.uid;
 
-    final cartRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('cart');
+  CollectionReference get cartRef =>
+      FirebaseFirestore.instance.collection('users').doc(userId).collection('cart');
 
-    final cartSnapshot = await cartRef.get();
-    if (cartSnapshot.docs.isEmpty) return;
+  Future<void> updateQuantity(String docId, int quantity) async {
+    if (quantity < 1) return;
+    await cartRef.doc(docId).update({'quantity': quantity});
+  }
 
+  Future<void> deleteItem(String docId) async {
+    await cartRef.doc(docId).delete();
+  }
+
+  Future<void> placeOrder(BuildContext context, List<QueryDocumentSnapshot> cartItems) async {
     int total = 0;
     List<Map<String, dynamic>> items = [];
 
-    for (var doc in cartSnapshot.docs) {
+    for (var doc in cartItems) {
       int price = (doc['price'] as num).toInt();
       int quantity = (doc['quantity'] as num).toInt();
 
       total += price * quantity;
-
       items.add({
         'name': doc['name'],
         'price': price,
@@ -40,7 +43,7 @@ class UserCartScreen extends StatelessWidget {
       'createdAt': Timestamp.now(),
     });
 
-    for (var doc in cartSnapshot.docs) {
+    for (var doc in cartItems) {
       await doc.reference.delete();
     }
 
@@ -51,16 +54,14 @@ class UserCartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-
     return Scaffold(
-      appBar: AppBar(title: const Text("My Cart")),
+      appBar: AppBar(
+        backgroundColor:const Color(0xFF2563EB),
+        title: const Text("My Cart",style: TextStyle(color: Colors.white),),
+        centerTitle: true,
+      ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('cart')
-            .snapshots(),
+        stream: cartRef.snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -69,35 +70,157 @@ class UserCartScreen extends StatelessWidget {
           final cartItems = snapshot.data!.docs;
 
           if (cartItems.isEmpty) {
-            return const Center(child: Text("Cart is empty"));
+            return const Center(child: Text("Your cart is empty 🛒"));
+          }
+
+          int totalAmount = 0;
+          for (var doc in cartItems) {
+            totalAmount +=
+                (doc['price'] as num).toInt() * (doc['quantity'] as num).toInt();
           }
 
           return Column(
             children: [
               Expanded(
                 child: ListView.builder(
+                  padding: const EdgeInsets.all(12),
                   itemCount: cartItems.length,
                   itemBuilder: (context, index) {
                     final item = cartItems[index];
                     int price = (item['price'] as num).toInt();
                     int quantity = (item['quantity'] as num).toInt();
 
-                    return ListTile(
-                      title: Text(item['name']),
-                      subtitle: Text("Qty: $quantity"),
-                      trailing: Text("₹ ${price * quantity}"),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 60,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.shopping_bag,
+                                color: Color(0xFF2563EB)),
+                          ),
+
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item['name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text("₹ $price",
+                                    style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove_circle_outline),
+                                      onPressed: () =>
+                                          updateQuantity(item.id, quantity - 1),
+                                    ),
+                                    Text(
+                                      quantity.toString(),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add_circle_outline),
+                                      onPressed: () =>
+                                          updateQuantity(item.id, quantity + 1),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            onPressed: () => deleteItem(item.id),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => placeOrder(context),
-                    child: const Text("Place Order"),
-                  ),
+
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Total Amount",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          "₹ $totalAmount",
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () =>
+                            placeOrder(context, cartItems),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          "Place Order",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold,color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

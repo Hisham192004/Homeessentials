@@ -52,15 +52,12 @@ class AdminProductsScreen extends StatelessWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ✏️ EDIT
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () {
                           _showEditDialog(context, doc.id, name, price);
                         },
                       ),
-
-                      // 🗑 DELETE
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {
@@ -80,8 +77,6 @@ class AdminProductsScreen extends StatelessWidget {
       ),
     );
   }
-
-  // ---------------- EDIT DIALOG ----------------
   static void _showEditDialog(
     BuildContext context,
     String docId,

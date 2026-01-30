@@ -12,7 +12,6 @@ class UserProductsScreen extends StatefulWidget {
 class _UserProductsScreenState extends State<UserProductsScreen> {
   String searchText = "";
 
-  // quantity map for each product
   Map<String, int> quantities = {};
 
   Future<void> addToCart(
@@ -51,7 +50,6 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
       ),
       body: Column(
         children: [
-          // 🔍 Search
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
@@ -71,7 +69,6 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
             ),
           ),
 
-          // 🧱 Products
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -102,10 +99,8 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
                   itemCount: products.length,
                   itemBuilder: (context, index) {
                     final product = products[index];
-                    quantities[product.id] ??= 1;
-
+                    quantities.putIfAbsent(product.id, () => 1);
                     return Container(
-                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -117,6 +112,7 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
                           ),
                         ],
                       ),
+                      padding: const EdgeInsets.all(12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -126,17 +122,24 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
                                 color: Colors.blue.shade50,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.shopping_bag, size: 50),
+                              child: const Icon(
+                                Icons.shopping_bag,
+                                size: 50,
+                                color: Color(0xFF2563EB),
+                              ),
                             ),
                           ),
+
                           const SizedBox(height: 8),
+
                           Text(
                             product['name'],
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold),
                           ),
+
                           Text(
                             "₹ ${product['price']}",
                             style: const TextStyle(
@@ -144,17 +147,17 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
                                 fontWeight: FontWeight.bold),
                           ),
 
-                          // ➕➖ Quantity
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.remove),
+                                icon: const Icon(Icons.remove_circle_outline),
                                 onPressed: () {
                                   if (quantities[product.id]! > 1) {
-                                    setState(() =>
-                                        quantities[product.id] =
-                                            quantities[product.id]! - 1);
+                                    setState(() {
+                                      quantities[product.id] =
+                                          quantities[product.id]! - 1;
+                                    });
                                   }
                                 },
                               ),
@@ -164,19 +167,20 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
                                     fontWeight: FontWeight.bold),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.add),
+                                icon: const Icon(Icons.add_circle_outline),
                                 onPressed: () {
-                                  setState(() =>
-                                      quantities[product.id] =
-                                          quantities[product.id]! + 1);
+                                  setState(() {
+                                    quantities[product.id] =
+                                        quantities[product.id]! + 1;
+                                  });
                                 },
                               ),
                             ],
                           ),
 
-                          // 🛒 Add to cart
                           SizedBox(
                             width: double.infinity,
+                            height: 36,
                             child: ElevatedButton(
                               onPressed: () {
                                 addToCart(

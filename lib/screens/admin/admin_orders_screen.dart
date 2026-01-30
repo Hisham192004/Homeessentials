@@ -10,22 +10,19 @@ class AdminOrdersScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Orders"),
         centerTitle: true,
-        backgroundColor: const Color(0xFF2563EB),
       ),
-
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('orders')
             .orderBy('createdAt', descending: true)
             .snapshots(),
-
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No orders yet"));
+            return const Center(child: Text("No orders found"));
           }
 
           final orders = snapshot.data!.docs;
@@ -40,59 +37,79 @@ class AdminOrdersScreen extends StatelessWidget {
               return Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 margin: const EdgeInsets.only(bottom: 12),
-
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 🆔 Order ID
                       Text(
-                        "Order ID: ${order.id.substring(0, 6)}",
+                        "Order ID: ${order.id}",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 8),
-
-                      // 📦 Items
                       ...items.map((item) {
                         return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text(
-                            "• ${item['name']}  x${item['quantity']}  (₹${item['price']})",
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "${item['name']} (x${item['quantity']})",
+                                ),
+                              ),
+                              Text(
+                                "₹ ${item['price'] * item['quantity']}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),
 
                       const Divider(),
-
-                      // 💰 Total
                       Text(
                         "Total: ₹ ${order['totalAmount']}",
                         style: const TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
                         ),
                       ),
 
-                      const SizedBox(height: 6),
-
-                      // 📌 Status
+                      const SizedBox(height: 8),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Status: "),
                           Chip(
-                            label: Text(order['status']),
-                            backgroundColor: order['status'] == 'pending'
-                                ? Colors.orange.shade100
-                                : Colors.green.shade100,
+                            label: Text(
+                              order['status'],
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor:
+                                order['status'] == 'pending'
+                                    ? Colors.orange
+                                    : Colors.green,
                           ),
+
+                          if (order['status'] == 'pending')
+                            ElevatedButton(
+                              onPressed: () async {
+                                await FirebaseFirestore.instance
+                                    .collection('orders')
+                                    .doc(order.id)
+                                    .update({
+                                  'status': 'delivered',
+                                });
+                              },
+                              child: const Text("Mark Delivered"),
+                            ),
                         ],
                       ),
                     ],

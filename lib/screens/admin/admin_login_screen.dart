@@ -171,10 +171,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       ),
     );
   }
-
-  // -------------------------------
-  // FIREBASE + FIRESTORE LOGIN LOGIC
-  // -------------------------------
+  
   void handleAdminLogin() {
   final email = emailController.text.trim();
   final password = passwordController.text.trim();

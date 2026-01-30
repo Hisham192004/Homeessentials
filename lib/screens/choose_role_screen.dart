@@ -26,8 +26,6 @@ class ChooseRoleScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
-                // App Logo / Title
                 FadeInDown(
                   duration: const Duration(milliseconds: 700),
                   child: Column(
@@ -59,8 +57,6 @@ class ChooseRoleScreen extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 50),
-
-                // Admin Card
                 FadeInUp(
                   delay: const Duration(milliseconds: 200),
                   child: _roleCard(
@@ -80,8 +76,6 @@ class ChooseRoleScreen extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 20),
-
-                // User Card
                 FadeInUp(
                   delay: const Duration(milliseconds: 400),
                   child: _roleCard(

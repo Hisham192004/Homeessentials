@@ -161,8 +161,6 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
       ),
     );
   }
-
-  // 🔐 FIREBASE REGISTER LOGIC
   void handleRegister() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();

@@ -1,0 +1,26 @@
+import 'package:flutter/material.dart';
+
+class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  bool isEnabled = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Notifications")),
+      body: SwitchListTile(
+        title: const Text("Allow Notifications"),
+        value: isEnabled,
+        onChanged: (value) {
+          setState(() => isEnabled = value);
+        },
+      ),
+    );
+  }
+}

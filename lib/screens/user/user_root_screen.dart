@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homeessentials/screens/user/user_orders_screen.dart';
+import 'package:homeessentials/screens/user/user_settings_screen.dart';
 import 'user_products_screen.dart';
 import 'user_cart_screen.dart';
 
@@ -13,11 +14,11 @@ class UserRootScreen extends StatefulWidget {
 class _UserRootScreenState extends State<UserRootScreen> {
   int index = 0;
 
-  final pages = const [
+  final pages = [
     UserProductsScreen(),
     UserCartScreen(),
-    UserOrdersScreen(),
-    Center(child: Text("Profile")),  // later
+    const UserOrdersScreen(),
+    UserSettingsScreen()
   ];
 
   @override

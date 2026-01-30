@@ -14,7 +14,7 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
   int index = 0;
 
   final pages = const [
-    AdminDashboard(),
+    AdminDashboardScreen(),
     AdminOrdersScreen(),
     AdminProductsScreen(),
     Center(child: Text("Settings")),
