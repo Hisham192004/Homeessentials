@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:homeessentials/screens/user/user_orders_screen.dart';
-import 'package:homeessentials/screens/user/user_settings_screen.dart';
-import 'user_products_screen.dart';
-import 'user_cart_screen.dart';
+import 'package:homeessentials/views/user/user_orders_screen.dart';
+import 'package:homeessentials/views/user/user_settings_screen.dart';
+import '../../views/user/user_products_screen.dart';
+import '../../views/user/user_cart_screen.dart';
 
 class UserRootScreen extends StatefulWidget {
   const UserRootScreen({super.key});
