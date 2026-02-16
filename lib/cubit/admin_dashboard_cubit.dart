@@ -22,7 +22,6 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
         revenue += (doc['totalAmount'] as num).toInt();
       }
 
-      // 🔹 BUSINESS LOGIC
       final int profit = (revenue * 0.20).toInt();
       final int loss = (revenue * 0.05).toInt();
 

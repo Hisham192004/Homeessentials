@@ -31,14 +31,28 @@ class UserProductsCubit extends Cubit<UserProductsState> {
   }
 
   void searchProducts(String query) {
-    final filtered = allProducts.where((doc) {
-      return doc['name'].toString().toLowerCase().contains(query.toLowerCase());
-    }).toList();
-
-    if (filtered.isEmpty) {
-      emit(UserProductsEmpty());
-    } else {
-      emit(UserProductsLoaded(filtered));
-    }
+  if (query.trim().isEmpty) {
+    emit(UserProductsLoaded(allProducts));
+    return;
   }
+
+  final q = query.toLowerCase();
+
+  final filtered = allProducts.where((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final name = (data['name'] ?? '').toString().toLowerCase();
+    final description =
+        (data['description'] ?? '').toString().toLowerCase();
+
+    return name.contains(q) || description.contains(q);
+  }).toList();
+
+  if (filtered.isEmpty) {
+    emit(UserProductsEmpty());
+  } else {
+    emit(UserProductsLoaded(filtered));
+  }
+}
+
+
 }

@@ -36,10 +36,10 @@ class UserSettingsScreen extends StatelessWidget {
           return Scaffold(
             backgroundColor: const Color(0xFFF5F6FA),
             appBar: AppBar(
-              backgroundColor: const Color(0xFF2563EB),
+              backgroundColor: Colors.white,
               title: const Text(
                 "Settings",
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.black),
               ),
               centerTitle: true,
               elevation: 0,

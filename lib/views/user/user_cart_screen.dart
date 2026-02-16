@@ -12,8 +12,8 @@ class UserCartScreen extends StatelessWidget {
       create: (_) => CartCubit(),
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xFF2563EB),
-          title: const Text("My Cart", style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.white,
+          title: const Text("My Cart", style: TextStyle(color: Colors.black)),
           centerTitle: true,
         ),
         body: BlocConsumer<CartCubit, CartState>(

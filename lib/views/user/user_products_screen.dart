@@ -40,37 +40,41 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => UserProductsCubit(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Products"),
-          centerTitle: true,
-          backgroundColor: const Color(0xFF2563EB),
-        ),
-        body: Column(
-          children: [
-            /// SEARCH
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: "Search products...",
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
+ @override
+Widget build(BuildContext context) {
+  return BlocProvider(
+    create: (_) => UserProductsCubit(),
+    child: Builder(
+      builder: (context) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Products"),
+            centerTitle: true,
+            backgroundColor:Colors.white,
+          ),
+          body: Column(
+            children: [
+              /// SEARCH
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Search products...",
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
+                  onChanged: (value) {
+                    context
+                        .read<UserProductsCubit>()
+                        .searchProducts(value);
+                  },
                 ),
-                onChanged: (value) {
-                  context.read<UserProductsCubit>().searchProducts(value);
-                },
               ),
-            ),
 
             /// PRODUCTS GRID
             Expanded(
@@ -251,6 +255,8 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
             ),
           ],
         ),
+        );
+      }
       ),
     );
   }
