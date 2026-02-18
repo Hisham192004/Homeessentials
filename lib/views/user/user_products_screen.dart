@@ -1,80 +1,76 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:homeessentials/cubit/user_products_cubit.dart';
+import 'package:homeessentials/views/user/user_bag_screen.dart';
+import 'package:homeessentials/views/user/user_wishlist_screen.dart';
+import 'user_product_details_screen.dart';
 
-class UserProductsScreen extends StatefulWidget {
+class UserProductsScreen extends StatelessWidget {
   const UserProductsScreen({super.key});
 
   @override
-  State<UserProductsScreen> createState() => _UserProductsScreenState();
-}
-
-class _UserProductsScreenState extends State<UserProductsScreen> {
-  final Map<String, int> quantities = {};
-
-  Future<void> addToCart(
-    String productId,
-    String name,
-    int price,
-    int quantity,
-  ) async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('cart')
-        .doc(productId)
-        .set({
-      'productId': productId,
-      'name': name,
-      'price': price,
-      'quantity': quantity,
-      'createdAt': Timestamp.now(),
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Added to cart")),
-    );
-  }
-
- @override
-Widget build(BuildContext context) {
-  return BlocProvider(
-    create: (_) => UserProductsCubit(),
-    child: Builder(
-      builder: (context) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text("Products"),
-            centerTitle: true,
-            backgroundColor:Colors.white,
-          ),
-          body: Column(
-            children: [
-              /// SEARCH
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "Search products...",
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => UserProductsCubit(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Products"),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          actions: [
+            /// WISHLIST BUTTON
+            IconButton(
+              icon: const Icon(Icons.favorite_border, color: Colors.black),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const UserWishlistScreen(),
                   ),
-                  onChanged: (value) {
-                    context
-                        .read<UserProductsCubit>()
-                        .searchProducts(value);
-                  },
+                );
+              },
+            ),
+
+            /// CART BUTTON
+            IconButton(
+              icon: const Icon(Icons.shopping_bag_outlined,
+                  color: Colors.black),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const MyBagScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: Column(
+          children: [
+
+            /// SEARCH BAR
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: "Search products...",
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
+                onChanged: (value) {
+                  context.read<UserProductsCubit>().searchProducts(value);
+                },
               ),
+            ),
 
             /// PRODUCTS GRID
             Expanded(
@@ -82,7 +78,8 @@ Widget build(BuildContext context) {
                 builder: (context, state) {
                   if (state is UserProductsLoading ||
                       state is UserProductsInitial) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                        child: CircularProgressIndicator());
                   }
 
                   if (state is UserProductsEmpty) {
@@ -95,7 +92,8 @@ Widget build(BuildContext context) {
                     return Center(
                       child: Text(
                         state.message,
-                        style: const TextStyle(color: Colors.red),
+                        style:
+                            const TextStyle(color: Colors.red),
                       ),
                     );
                   }
@@ -118,231 +116,209 @@ Widget build(BuildContext context) {
                         final data =
                             product.data() as Map<String, dynamic>;
 
-                        final String imageUrl = data['imageUrl'] ?? '';
-                        final String name = data['name'] ?? '';
-                        final int price = data['price'] ?? 0;
+                        final String imageUrl =
+                            data['imageUrl'] ?? '';
+                        final String name =
+                            data['name'] ?? '';
+                        final int price =
+                            data['price'] ?? 0;
                         final String description =
                             data['description'] ?? '';
 
-                        quantities.putIfAbsent(product.id, () => 1);
-
                         return GestureDetector(
                           onTap: () {
-                            _showProductDialog(
+                            Navigator.push(
                               context,
-                              product.id,
-                              name,
-                              price,
-                              description,
-                              imageUrl,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    UserProductDetailsScreen(
+                                  productId: product.id,
+                                  name: name,
+                                  price: price,
+                                  description: description,
+                                  imageUrl: imageUrl,
+                                ),
+                              ),
                             );
                           },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.black.withOpacity(0.08),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
+                          child: Stack(
+                            children: [
+
+                              /// PRODUCT CARD
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black
+                                          .withOpacity(0.08),
+                                      blurRadius: 8,
+                                      offset:
+                                          const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                /// IMAGE + WISHLIST
-                                Expanded(
-                                  child: Stack(
-                                    children: [
-                                      ClipRRect(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: ClipRRect(
                                         borderRadius:
-                                            const BorderRadius.vertical(
+                                            const BorderRadius
+                                                .vertical(
                                           top: Radius.circular(16),
                                         ),
-                                        child: imageUrl.isNotEmpty
+                                        child: imageUrl
+                                                .isNotEmpty
                                             ? Image.network(
                                                 imageUrl,
-                                                width:
-                                                    double.infinity,
+                                                width: double
+                                                    .infinity,
                                                 fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (_, __, ___) =>
-                                                        _imageFallback(),
                                               )
-                                            : _imageFallback(),
+                                            : Container(
+                                                color: Colors
+                                                    .grey.shade200,
+                                                child:
+                                                    const Center(
+                                                  child: Icon(Icons
+                                                      .image_not_supported),
+                                                ),
+                                              ),
                                       ),
-
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: Container(
-                                          decoration:
-                                              const BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: IconButton(
-                                            icon: const Icon(
-                                              Icons.favorite_border,
-                                              color: Colors.red,
-                                              size: 18,
+                                    ),
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.all(
+                                              10),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment
+                                                .start,
+                                        children: [
+                                          Text(
+                                            description,
+                                            maxLines: 1,
+                                            overflow:
+                                                TextOverflow
+                                                    .ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors
+                                                  .grey.shade600,
                                             ),
-                                            onPressed: () {},
                                           ),
-                                        ),
+                                          const SizedBox(
+                                              height: 4),
+                                          Text(
+                                            name,
+                                            maxLines: 1,
+                                            overflow:
+                                                TextOverflow
+                                                    .ellipsis,
+                                            style:
+                                                const TextStyle(
+                                              fontWeight:
+                                                  FontWeight
+                                                      .bold,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              height: 6),
+                                          Text(
+                                            "₹ $price",
+                                            style:
+                                                const TextStyle(
+                                              color:
+                                                  Colors.green,
+                                              fontWeight:
+                                                  FontWeight
+                                                      .bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
+                              ),
 
-                                /// DETAILS
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.all(10),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        description,
-                                        maxLines: 1,
-                                        overflow:
-                                            TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors
-                                              .grey.shade600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        name,
-                                        maxLines: 1,
-                                        overflow:
-                                            TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight:
-                                              FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        "₹ $price",
-                                        style: const TextStyle(
-                                          color: Colors.green,
-                                          fontWeight:
-                                              FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              /// ❤️ WISHLIST ICON (TOP RIGHT)
+                              /// ❤️ WISHLIST ICON (TOP RIGHT)
+Positioned(
+  top: 8,
+  right: 8,
+  child: StreamBuilder<DocumentSnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('wishlist')
+        .doc(product.id)
+        .snapshots(),
+    builder: (context, snapshot) {
+      final isWishlisted =
+          snapshot.data != null && snapshot.data!.exists;
+
+      return GestureDetector(
+        onTap: () async {
+          final wishlistRef = FirebaseFirestore.instance
+              .collection('users')
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+              .collection('wishlist')
+              .doc(product.id);
+
+          if (isWishlisted) {
+            await wishlistRef.delete();
+          } else {
+            await wishlistRef.set({
+              'productId': product.id,
+              'name': name,
+              'price': price,
+              'imageUrl': imageUrl,
+              'createdAt': Timestamp.now(),
+            });
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: Icon(
+            isWishlisted
+                ? Icons.favorite
+                : Icons.favorite_border,
+            size: 18,
+            color: Colors.red,
+          ),
+        ),
+      );
+    },
+  ),
+),
+
+                            ],
                           ),
                         );
                       },
                     );
                   }
 
-                  return const SizedBox.shrink();
+                  return const SizedBox();
                 },
               ),
             ),
           ],
-        ),
-        );
-      }
-      ),
-    );
-  }
-
-  /// IMAGE FALLBACK
-  Widget _imageFallback() {
-    return Container(
-      color: Colors.grey.shade200,
-      child: const Center(
-        child: Icon(Icons.image_not_supported),
-      ),
-    );
-  }
-
-  /// PRODUCT DIALOG
-  void _showProductDialog(
-    BuildContext context,
-    String productId,
-    String name,
-    int price,
-    String description,
-    String imageUrl,
-  ) {
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  imageUrl,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      _imageFallback(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(description),
-              const SizedBox(height: 10),
-              Text(
-                "₹ $price",
-                style: const TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Buy Now"),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        addToCart(productId, name, price, 1);
-                        Navigator.pop(context);
-                      },
-                      child: const Text("Add to Cart"),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );
