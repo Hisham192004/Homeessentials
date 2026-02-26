@@ -9,7 +9,7 @@ class UserCartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => CartCubit(),
+      create: (_) => CartCubit('cart'),
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -91,17 +91,39 @@ class _CartItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.shopping_bag, color: Color(0xFF2563EB)),
+          /// ✅ PRODUCT IMAGE
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: item['imageUrl'] != null &&
+                    item['imageUrl'].toString().isNotEmpty
+                ? Image.network(
+                    item['imageUrl'],
+                    height: 70,
+                    width: 70,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    height: 70,
+                    width: 70,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image),
+                  ),
+          ),
+
           const SizedBox(width: 12),
 
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['name'],
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text("₹ $price",
-                    style: const TextStyle(color: Colors.green)),
+                Text(
+                  item['name'],
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "₹ $price",
+                  style: const TextStyle(color: Colors.green),
+                ),
                 Row(
                   children: [
                     IconButton(
@@ -161,15 +183,15 @@ class _CartBottomBar extends StatelessWidget {
             height: 48,
             child: ElevatedButton(
               onPressed: () async {
-                await cubit.placeOrder();
+                await cubit.addToBag();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Order placed successfully")),
+                  const SnackBar(content: Text("Added to Bag successfully")),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
               ),
-              child: const Text("Place Order",
+              child: const Text("Add to Bag",
                   style: TextStyle(color: Colors.white)),
             ),
           ),

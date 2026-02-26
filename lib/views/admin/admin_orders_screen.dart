@@ -82,7 +82,8 @@ class _OrderTileState extends State<_OrderTile> {
 
     final List items = data['items'] ?? [];
     final String status = data['status'] ?? 'pending';
-    final int total = data['totalAmount'] ?? 0;
+    final int total =
+    (data['totalAmount'] as num?)?.toInt() ?? 0;
 
     return Card(
       elevation: 3,

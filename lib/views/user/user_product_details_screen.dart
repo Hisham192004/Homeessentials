@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class UserProductDetailsScreen extends StatefulWidget {
+class UserProductDetailsScreen extends StatelessWidget {
   final String productId;
   final String name;
   final int price;
@@ -18,88 +18,73 @@ class UserProductDetailsScreen extends StatefulWidget {
     required this.imageUrl,
   });
 
-  @override
-  State<UserProductDetailsScreen> createState() =>
-      _UserProductDetailsScreenState();
-}
+  /// ✅ ADD TO CART
+  Future<void> addToCart(BuildContext context) async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
 
-class _UserProductDetailsScreenState
-    extends State<UserProductDetailsScreen> {
-  bool isWishlisted = false;
-  final userId = FirebaseAuth.instance.currentUser!.uid;
-
-  @override
-  void initState() {
-    super.initState();
-    checkWishlistStatus();
-  }
-
-  /// 🔎 CHECK IF PRODUCT IS ALREADY WISHLISTED
-  Future<void> checkWishlistStatus() async {
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .doc(widget.productId)
-        .get();
-
-    setState(() {
-      isWishlisted = doc.exists;
-    });
-  }
-
-  /// ❤️ TOGGLE WISHLIST
-  Future<void> toggleWishlist() async {
-    final wishlistRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .doc(widget.productId);
-
-    if (isWishlisted) {
-      await wishlistRef.delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Removed from wishlist")),
-      );
-    } else {
-      await wishlistRef.set({
-        'productId': widget.productId,
-        'name': widget.name,
-        'price': widget.price,
-        'imageUrl': widget.imageUrl,
-        'createdAt': Timestamp.now(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Added to wishlist ❤️")),
-      );
-    }
-
-    setState(() {
-      isWishlisted = !isWishlisted;
-    });
-  }
-
-  /// 🛍 ADD TO CART
-  Future<void> addToCart() async {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(userId)
         .collection('cart')
-        .doc(widget.productId)
+        .doc(productId)
         .set({
-      'productId': widget.productId,
-      'name': widget.name,
-      'price': widget.price,
-      'imageUrl': widget.imageUrl,
+      'productId': productId,
+      'name': name,
+      'price': price,
       'quantity': 1,
+      'imageUrl': imageUrl,
       'createdAt': Timestamp.now(),
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Added to bag")),
+      const SnackBar(content: Text("Added to Cart")),
     );
   }
+
+  /// ✅ ADD TO WISHLIST
+  Future<void> addToWishlist(BuildContext context) async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('wishlist')
+        .doc(productId)
+        .set({
+      'productId': productId,
+      'name': name,
+      'price': price,
+      'imageUrl': imageUrl,
+      'createdAt': Timestamp.now(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Added to wishlist ❤️")),
+    );
+  }
+  /// ✅ ADD TO BAG
+Future<void> addToBag(BuildContext context) async {
+  final userId = FirebaseAuth.instance.currentUser!.uid;
+
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .collection('bag')   // 🔥 This is different from cart
+      .doc(productId)
+      .set({
+    'productId': productId,
+    'name': name,
+    'price': price,
+    'quantity': 1,
+    'imageUrl': imageUrl,
+    'createdAt': Timestamp.now(),
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Added to Bag 🛍")),
+  );
+}
+  
 
   @override
   Widget build(BuildContext context) {
@@ -113,39 +98,51 @@ class _UserProductDetailsScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// IMAGE + HEART
+            /// 🔥 IMAGE WITH WISHLIST ICON
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: widget.imageUrl.isNotEmpty
-                      ? Image.network(
-                          widget.imageUrl,
+                imageUrl.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          imageUrl,
                           height: 250,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                        )
-                      : Container(
-                          height: 250,
-                          color: Colors.grey.shade200,
                         ),
-                ),
+                      )
+                    : Container(
+                        height: 250,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.image_not_supported),
+                        ),
+                      ),
 
+                /// ❤️ WISHLIST BUTTON (TOP RIGHT)
                 Positioned(
                   top: 10,
                   right: 10,
                   child: GestureDetector(
-                    onTap: toggleWishlist,
+                    onTap: () => addToWishlist(context),
                     child: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 6,
+                          ),
+                        ],
                       ),
-                      child: Icon(
-                        isWishlisted
-                            ? Icons.favorite
-                            : Icons.favorite_border,
+                      child: const Icon(
+                        Icons.favorite_border,
                         color: Colors.red,
                       ),
                     ),
@@ -156,8 +153,9 @@ class _UserProductDetailsScreenState
 
             const SizedBox(height: 20),
 
+            /// PRODUCT NAME
             Text(
-              widget.name,
+              name,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -166,12 +164,14 @@ class _UserProductDetailsScreenState
 
             const SizedBox(height: 8),
 
-            Text(widget.description),
+            /// DESCRIPTION
+            Text(description),
 
             const SizedBox(height: 12),
 
+            /// PRICE
             Text(
-              "₹ ${widget.price}",
+              "₹ $price",
               style: const TextStyle(
                 color: Colors.green,
                 fontSize: 18,
@@ -182,13 +182,23 @@ class _UserProductDetailsScreenState
             const SizedBox(height: 25),
 
             /// BUTTONS
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: addToCart,
-                child: const Text("Add to Bag"),
-              ),
-            ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => addToBag(context),
+                    child: const Text("Add to Bag"),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => addToCart(context),
+                    child: const Text("Add to Cart"),
+                  ),
+                ),
+              ],
+            )
           ],
         ),
       ),

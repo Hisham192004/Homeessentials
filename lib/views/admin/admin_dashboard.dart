@@ -33,6 +33,8 @@ class AdminDashboardScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
+
+                  /// ✅ 4 SUMMARY BOXES (UNCHANGED)
                   GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: 2,
@@ -54,6 +56,8 @@ class AdminDashboardScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 28),
+
+                  /// ✅ GRAPH (AMOUNT / PROFIT / LOSS)
                   const Text(
                     "Business Summary",
                     style:

@@ -123,28 +123,33 @@ class UserWishlistScreen extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(userId)
-                          .collection('cart')
-                          .doc(productId)
-                          .set({
-                        'productId': productId,
-                        'name': name,
-                        'price': price,
-                        'imageUrl': imageUrl,
-                        'quantity': 1,
-                        'isSelected': true,
-                        'createdAt': Timestamp.now(),
-                      });
+  final bagRef = FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .collection('bag')
+      .doc(productId);
 
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        const SnackBar(
-                          content: Text("Added to bag"),
-                        ),
-                      );
-                    },
+  final wishlistRef = FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .collection('wishlist')
+      .doc(productId);
+
+  await bagRef.set({
+    'productId': productId,
+    'name': name,
+    'price': price,
+    'imageUrl': imageUrl,
+    'quantity': 1,
+    'createdAt': Timestamp.now(),
+  });
+
+  await wishlistRef.delete();
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Moved to Bag")),
+  );
+},
                     child: const Text("Add to Bag"),
                   ),
                 ),

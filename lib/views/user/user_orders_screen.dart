@@ -39,154 +39,250 @@ class UserOrdersScreen extends StatelessWidget {
         ),
         body: BlocBuilder<UserOrdersCubit, UserOrdersState>(
           builder: (context, state) {
-            if (state is UserOrdersLoading || state is UserOrdersInitial) {
+            if (state is UserOrdersLoading ||
+                state is UserOrdersInitial) {
               return const Center(child: CircularProgressIndicator());
-            } else if (state is UserOrdersEmpty) {
+            }
+
+            if (state is UserOrdersEmpty) {
               return const Center(
                 child: Text(
                   "You haven’t placed any orders yet 🛒",
                   style: TextStyle(fontSize: 16),
                 ),
               );
-            } else if (state is UserOrdersError) {
+            }
+
+            if (state is UserOrdersError) {
               return Center(
                 child: Text(
                   "Error: ${state.message}",
                   style: const TextStyle(color: Colors.red),
                 ),
               );
-            } else if (state is UserOrdersLoaded) {
+            }
+
+            if (state is UserOrdersLoaded) {
               final orders = state.orders;
 
               return ListView.builder(
                 padding: const EdgeInsets.all(12),
                 itemCount: orders.length,
                 itemBuilder: (context, index) {
-                  final order = orders[index];
-                  final items = List<Map<String, dynamic>>.from(order['items']);
-                  final createdAt = (order['createdAt'] as Timestamp).toDate();
+                  final orderDoc = orders[index];
+                  final data =
+                      orderDoc.data() as Map<String, dynamic>;
+
+                  // ✅ SAFE FIELD READING
+                  final String status =
+                      data['status'] ?? 'pending';
+
+                  final int totalAmount =
+    (data['totalAmount'] as num?)?.toInt() ?? 0;
+
+                  final List<Map<String, dynamic>> items =
+                      (data['items'] ?? [])
+                          .map<Map<String, dynamic>>(
+                              (item) =>
+                                  Map<String, dynamic>.from(item))
+                          .toList();
+
+                  final Timestamp? timestamp =
+                      data['createdAt'];
+
+                  final DateTime createdAt =
+                      timestamp != null
+                          ? timestamp.toDate()
+                          : DateTime.now();
+
                   final formattedDate =
-                      DateFormat('dd MMM yyyy • hh:mm a').format(createdAt);
+                      DateFormat('dd MMM yyyy • hh:mm a')
+                          .format(createdAt);
 
                   return Container(
-  margin: const EdgeInsets.only(bottom: 14),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-        offset: const Offset(0, 4),
-      ),
-    ],
-  ),
-  child: ExpansionTile(
-    tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
-    collapsedShape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
-    title: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // LEFT SIDE (Order ID + Status)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Order #${order.id.substring(0, 8).toUpperCase()}",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: _statusColor(order['status'])
-                    .withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                order['status'].toString().toUpperCase(),
-                style: TextStyle(
-                  color: _statusColor(order['status']),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        // RIGHT SIDE (Total Amount)
-        Text(
-          "₹ ${order['totalAmount']}",
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
-      ],
-    ),
-
-    subtitle: Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Text(
-        formattedDate,
-        style: const TextStyle(
-          fontSize: 12,
-          color: Colors.grey,
-        ),
-      ),
-    ),
-
-    children: [
-      const Divider(),
-
-      // 🔹 ORDER ITEMS
-      Column(
-        children: items.map((item) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    item['name'],
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    margin:
+                        const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black
+                              .withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                Text(
-                  "x${item['quantity']}",
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  "₹ ${item['price'] * item['quantity']}",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    ],
-  ),
-);
+                    child: ExpansionTile(
+                      tilePadding:
+                          const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8),
+                      childrenPadding:
+                          const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(16),
+                      ),
+                      collapsedShape:
+                          RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(16),
+                      ),
+                      title: Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment
+                                .spaceBetween,
+                        children: [
+                          /// LEFT SIDE
+                          Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment
+                                    .start,
+                            children: [
+                              Text(
+                                "Order #${orderDoc.id.substring(0, 8).toUpperCase()}",
+                                style:
+                                    const TextStyle(
+                                  fontWeight:
+                                      FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(
+                                  height: 4),
+                              Container(
+                                padding:
+                                    const EdgeInsets
+                                        .symmetric(
+                                            horizontal:
+                                                10,
+                                            vertical:
+                                                4),
+                                decoration:
+                                    BoxDecoration(
+                                  color:
+                                      _statusColor(
+                                              status)
+                                          .withOpacity(
+                                              0.15),
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                              20),
+                                ),
+                                child: Text(
+                                  status
+                                      .toUpperCase(),
+                                  style:
+                                      TextStyle(
+                                    color:
+                                        _statusColor(
+                                            status),
+                                    fontWeight:
+                                        FontWeight
+                                            .bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
 
+                          /// RIGHT SIDE
+                          Text(
+                            "₹ $totalAmount",
+                            style:
+                                const TextStyle(
+                              fontSize: 16,
+                              fontWeight:
+                                  FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Padding(
+                        padding:
+                            const EdgeInsets.only(
+                                top: 6),
+                        child: Text(
+                          formattedDate,
+                          style:
+                              const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+
+                      /// 🔽 EXPANDED ITEMS
+                      children: [
+                        const Divider(),
+                        Column(
+                          children:
+                              items.map((item) {
+                            final name =
+                                item['name'] ??
+                                    '';
+                            final quantity =
+                                item['quantity'] ??
+                                    1;
+                            final price =
+                                item['price'] ??
+                                    0;
+
+                            return Padding(
+                              padding:
+                                  const EdgeInsets
+                                      .symmetric(
+                                          vertical:
+                                              6),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      name,
+                                      style:
+                                          const TextStyle(
+                                        fontSize:
+                                            14,
+                                        fontWeight:
+                                            FontWeight
+                                                .w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    "x$quantity",
+                                    style:
+                                        const TextStyle(
+                                            color: Colors
+                                                .grey),
+                                  ),
+                                  const SizedBox(
+                                      width: 12),
+                                  Text(
+                                    "₹ ${price * quantity}",
+                                    style:
+                                        const TextStyle(
+                                      fontWeight:
+                                          FontWeight
+                                              .bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               );
             }

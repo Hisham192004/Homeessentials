@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:equatable/equatable.dart';
 
 part 'user_products_state.dart';
 
@@ -9,50 +8,62 @@ class UserProductsCubit extends Cubit<UserProductsState> {
     fetchProducts();
   }
 
-  List<QueryDocumentSnapshot> allProducts = [];
+  List<QueryDocumentSnapshot> _allProducts = [];
+  List<QueryDocumentSnapshot> _filteredProducts = [];
 
-  void fetchProducts() {
-    emit(UserProductsLoading());
+  /// FETCH PRODUCTS
+  Future<void> fetchProducts() async {
+  if (isClosed) return;
 
-    FirebaseFirestore.instance
+  emit(UserProductsLoading());
+
+  try {
+    final snapshot = await FirebaseFirestore.instance
         .collection('products')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .listen((snapshot) {
-      allProducts = snapshot.docs;
-      if (allProducts.isEmpty) {
-        emit(UserProductsEmpty());
-      } else {
-        emit(UserProductsLoaded(allProducts));
-      }
-    }, onError: (e) {
+        .get();
+
+    if (isClosed) return;
+
+    _allProducts = snapshot.docs;
+    _filteredProducts = _allProducts;
+
+    if (_allProducts.isEmpty) {
+      emit(UserProductsEmpty());
+    } else {
+      emit(UserProductsLoaded(_filteredProducts));
+    }
+  } catch (e) {
+    if (!isClosed) {
       emit(UserProductsError(e.toString()));
-    });
-  }
-
-  void searchProducts(String query) {
-  if (query.trim().isEmpty) {
-    emit(UserProductsLoaded(allProducts));
-    return;
-  }
-
-  final q = query.toLowerCase();
-
-  final filtered = allProducts.where((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final name = (data['name'] ?? '').toString().toLowerCase();
-    final description =
-        (data['description'] ?? '').toString().toLowerCase();
-
-    return name.contains(q) || description.contains(q);
-  }).toList();
-
-  if (filtered.isEmpty) {
-    emit(UserProductsEmpty());
-  } else {
-    emit(UserProductsLoaded(filtered));
+    }
   }
 }
+  /// SEARCH PRODUCTS
+  void searchProducts(String query) {
+  if (isClosed) return;
 
+  if (query.trim().isEmpty) {
+    _filteredProducts = _allProducts;
+  } else {
+    final lowerQuery = query.toLowerCase();
 
+    _filteredProducts = _allProducts.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final name = data['name']?.toString().toLowerCase() ?? '';
+      final description =
+          data['description']?.toString().toLowerCase() ?? '';
+
+      return name.contains(lowerQuery) ||
+          description.contains(lowerQuery);
+    }).toList();
+  }
+
+  if (isClosed) return;
+
+  if (_filteredProducts.isEmpty) {
+    emit(UserProductsEmpty());
+  } else {
+    emit(UserProductsLoaded(_filteredProducts));
+  }
+}
 }

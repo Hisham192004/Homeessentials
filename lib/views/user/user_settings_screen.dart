@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:homeessentials/cubit/user_settings_cubit.dart';
+import 'package:homeessentials/cubit/cubit/user_settings_cubit.dart';
 import 'package:homeessentials/screens/choose_role_screen.dart';
 import 'package:homeessentials/screens/user/change_password_screen.dart';
 import 'package:homeessentials/screens/user/delivery_address_screen.dart';
@@ -36,10 +36,10 @@ class UserSettingsScreen extends StatelessWidget {
           return Scaffold(
             backgroundColor: const Color(0xFFF5F6FA),
             appBar: AppBar(
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xFF2563EB),
               title: const Text(
                 "Settings",
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.white),
               ),
               centerTitle: true,
               elevation: 0,
@@ -48,6 +48,7 @@ class UserSettingsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // USER INFO CARD
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -89,7 +90,7 @@ class UserSettingsScreen extends StatelessWidget {
                                 user?.email ?? "No email",
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  color: Color.fromARGB(255, 0, 0, 0),
+                                  color: Colors.black,
                                 ),
                               ),
                             ],
@@ -98,9 +99,10 @@ class UserSettingsScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 24),
 
-                  // Profile & Orders
+                  // PROFILE & ORDERS
                   _settingsCard(children: [
                     _settingsTile(
                       icon: Icons.person_outline,
@@ -120,7 +122,8 @@ class UserSettingsScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const DeliveryAddressScreen()),
+                              builder: (_) =>
+                                  const DeliveryAddressScreen()),
                         );
                       },
                     ),
@@ -139,7 +142,7 @@ class UserSettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Security & Help
+                  // SECURITY & HELP
                   _settingsCard(children: [
                     _settingsTile(
                       icon: Icons.lock_outline,
@@ -148,7 +151,8 @@ class UserSettingsScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const ChangePasswordScreen()),
+                              builder: (_) =>
+                                  const ChangePasswordScreen()),
                         );
                       },
                     ),
@@ -159,7 +163,8 @@ class UserSettingsScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const NotificationsScreen()),
+                              builder: (_) =>
+                                  const NotificationsScreen()),
                         );
                       },
                     ),
@@ -170,7 +175,8 @@ class UserSettingsScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const HelpSupportScreen()),
+                              builder: (_) =>
+                                  const HelpSupportScreen()),
                         );
                       },
                     ),
@@ -178,17 +184,9 @@ class UserSettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Logout
+                  // LOGOUT
                   _settingsCard(children: [
-                    ListTile(
-                      leading: const Icon(Icons.logout, color: Colors.red),
-                      title: const Text(
-                        "Logout",
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    _logoutTile(
                       onTap: () {
                         cubit.logout();
                       },
@@ -196,6 +194,7 @@ class UserSettingsScreen extends StatelessWidget {
                   ]),
 
                   const SizedBox(height: 20),
+
                   const Text(
                     "HomeEssentials v1.0.0",
                     style: TextStyle(
@@ -225,7 +224,11 @@ class UserSettingsScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(children: children),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        child: Column(children: children),
+      ),
     );
   }
 
@@ -234,17 +237,55 @@ class UserSettingsScreen extends StatelessWidget {
     required String title,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.blue),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.blue),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16),
+          ],
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+    );
+  }
+
+  Widget _logoutTile({required VoidCallback onTap}) {
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: const Padding(
+        padding:
+            EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(Icons.logout, color: Colors.red),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                "Logout",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

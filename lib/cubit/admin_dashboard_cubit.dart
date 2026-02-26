@@ -6,39 +6,48 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
   AdminDashboardCubit() : super(const AdminDashboardState());
 
   Future<void> loadDashboard() async {
-    emit(state.copyWith(isLoading: true));
+  emit(state.copyWith(isLoading: true));
 
-    try {
-      final ordersSnap =
-          await FirebaseFirestore.instance.collection('orders').get();
-      final productsSnap =
-          await FirebaseFirestore.instance.collection('products').get();
-      final usersSnap =
-          await FirebaseFirestore.instance.collection('users').get();
+  try {
+    final ordersSnap =
+        await FirebaseFirestore.instance.collection('orders').get();
 
-      int revenue = 0;
+    final productsSnap =
+        await FirebaseFirestore.instance.collection('products').get();
 
-      for (var doc in ordersSnap.docs) {
-        revenue += (doc['totalAmount'] as num).toInt();
-      }
+    final usersSnap =
+        await FirebaseFirestore.instance.collection('users').get();
 
-      final int profit = (revenue * 0.20).toInt();
-      final int loss = (revenue * 0.05).toInt();
+    int revenue = 0;
 
-      emit(state.copyWith(
-        isLoading: false,
-        totalOrders: ordersSnap.docs.length,
-        totalRevenue: revenue,
-        totalProducts: productsSnap.docs.length,
-        totalUsers: usersSnap.docs.length,
-        profit: profit,
-        loss: loss,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: "Failed to load dashboard",
-      ));
-    }
+    for (var doc in ordersSnap.docs) {
+  final data = doc.data();
+
+  final status = data['status'] ?? 'pending';
+  final amount = (data['totalAmount'] ?? 0) as num;
+
+  if (status == 'delivered') {
+    revenue += amount.toInt();
   }
+}
+
+    final int profit = (revenue * 0.20).toInt();
+    final int loss = (revenue * 0.05).toInt();
+
+    emit(state.copyWith(
+      isLoading: false,
+      totalOrders: ordersSnap.docs.length,
+      totalRevenue: revenue,
+      totalProducts: productsSnap.docs.length,
+      totalUsers: usersSnap.docs.length,
+      profit: profit,
+      loss: loss,
+    ));
+  } catch (e) {
+    emit(state.copyWith(
+      isLoading: false,
+      error: e.toString(),
+    ));
+  }
+}
 }
